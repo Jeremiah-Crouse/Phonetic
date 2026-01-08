@@ -9,6 +9,7 @@ CORS(app)
 
 # Initialize Translate
 # Note: Ensure GOOGLE_APPLICATION_CREDENTIALS is set in your environment
+os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'serviceaccount.json'
 translate_client = translate.Client()
 
 def get_phonetic_hebrew(name):
