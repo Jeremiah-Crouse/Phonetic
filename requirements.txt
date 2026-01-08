@@ -1,0 +1,6 @@
+flask
+flask-cors
+gunicorn
+google-cloud-translate
+gruut
+gruut-lang-en
