@@ -1,0 +1,9 @@
+// Inside your script tag on the GitHub site:
+async function askOracle(name) {
+    const response = await fetch('https://your-render-app-name.onrender.com/oracle', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ name: name })
+    });
+    return await response.json();
+}
