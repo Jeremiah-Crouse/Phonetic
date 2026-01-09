@@ -9,7 +9,7 @@ app = Flask(__name__)
 CORS(app)
 
 # AUTHENTICATION
-# Render Secret File path
+# Render Secret File path - ensure this matches your Render Dashboard filename
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = '/etc/secrets/serviceaccount.json'
 translate_client = translate.Client()
 
@@ -34,11 +34,11 @@ MAPS = {
     },
     'arabic': {
         'consonants': {
-            'p': 'ب', 'b': 'ب', 't': 'ت', 'd': 'د', 'k': 'ك', 'ɡ': 'ج',
+            'p': 'ب', 'b': 'ب', 't': 'ت', 'd': 'د', 'k': 'ك', 'ɡ': 'ज',
             'f': 'ف', 'v': 'ف', 's': 'س', 'z': 'ز', 'ʃ': 'ش', 'ʒ': 'ج',
-            'x': 'خ', 'h': 'ه', 'm': 'म', 'n': 'न', 'l': 'ل', 'r': 'ر',
+            'x': 'خ', 'h': 'ه', 'm': 'م', 'n': 'न', 'l': 'ल', 'r': 'ر',
             'j': 'ي', 'w': 'و', 'θ': 'ث', 'ð': 'ذ', 't͡ʃ': 'تش', 'd͡ʒ': 'ج',
-            'ŋ': 'ن', 'ɹ': 'र', 'ɾ': 'र'
+            'ŋ': 'ن', 'ɹ': 'ر', 'ɾ': 'ر'
         },
         'vowels': {
             'a': '\u064E', 'æ': '\u064E', 'e': '\u0650', 'i': '\u0650', 
@@ -51,7 +51,7 @@ MAPS = {
     },
     'indian': {
         'consonants': {
-            'p': 'प', 'b': 'ब', 't': 'त', 'd': 'द', 'k': 'क', 'ɡ': 'ग',
+            'p': 'प', 'b': 'ब', 't': 'त', 'd': 'द', 'क': 'क', 'ɡ': 'ग',
             'f': 'फ़', 'v': 'व', 's': 'स', 'z': 'ज़', 'ʃ': 'श', 'ʒ': 'झ',
             'x': 'ख', 'h': 'ह', 'm': 'म', 'n': 'न', 'l': 'ल', 'r': 'र',
             'j': 'य', 'w': 'व', 'θ': 'थ', 'ð': 'द', 't͡ʃ': 'च', 'd͡ʒ': 'ज',
@@ -89,7 +89,7 @@ def get_phonetic_sig(name, mode):
                 elif mode == 'arabic':
                     anchor = 'ا' if not last_was_con else ''
                     sig += anchor + cfg['vowels'][p]
-                else: # Indian/Hindi
+                else: # Indian
                     sig += cfg['vowels'][p]
                 last_was_con = 'ר' in cfg['vowels'][p] or mode == 'indian'
 
@@ -102,6 +102,12 @@ def get_phonetic_sig(name, mode):
             sig = "".join(chars)
         return sig
     except: return "???"
+
+# --- HEARTBEAT ENDPOINT ---
+@app.route('/awake', methods=['GET'])
+def awake():
+    """Endpoint for cron-job.org to keep the server from sleeping."""
+    return "The Oracle is conscious.", 200
 
 @app.route('/oracle', methods=['POST'])
 def oracle():
@@ -122,4 +128,5 @@ def oracle():
     })
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port)
