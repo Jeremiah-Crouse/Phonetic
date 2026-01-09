@@ -31,7 +31,7 @@
     </div>
 
     <div id="chat-flow">
-        <div class="message oracle-msg">The Oracle is attuned to the Hebrew architecture. What is your inquiry?</div>
+        <div class="message oracle-msg">The Oracle is attuned. Speak your inquiry.</div>
     </div>
 
     <div class="input-box">
@@ -43,6 +43,13 @@
         const input = document.getElementById('userInput');
         const flow = document.getElementById('chat-flow');
         const API_URL = 'https://phonetic-rr67.onrender.com/oracle';
+
+        // Helper to turn &#39; into '
+        function decodeHtml(html) {
+            const txt = document.createElement("textarea");
+            txt.innerHTML = html;
+            return txt.value;
+        }
 
         function setLens(mode) {
             currentMode = mode;
@@ -71,8 +78,11 @@
                         body: JSON.stringify({ name: text, mode: currentMode })
                     });
                     const data = await response.json();
+                    
                     loader.classList.remove('loading');
-                    loader.innerText = data.interpretation;
+                    // APPLY DECODER HERE
+                    loader.innerText = decodeHtml(data.interpretation);
+                    
                 } catch (err) {
                     loader.innerText = "The connection is shadowed. Check the server.";
                 }
