@@ -8,12 +8,12 @@ from google.cloud import translate_v2 as translate
 app = Flask(__name__)
 CORS(app)
 
-# 1. AUTHENTICATION
-# Ensure your Render Secret File is named 'serviceaccount.json'
+# AUTHENTICATION
+# Render Secret File path
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = '/etc/secrets/serviceaccount.json'
 translate_client = translate.Client()
 
-# 2. PHONETIC MAPPINGS
+# PHONETIC MAPPINGS
 MAPS = {
     'hebrew': {
         'consonants': {
@@ -36,9 +36,9 @@ MAPS = {
         'consonants': {
             'p': 'ب', 'b': 'ب', 't': 'ت', 'd': 'د', 'k': 'ك', 'ɡ': 'ج',
             'f': 'ف', 'v': 'ف', 's': 'س', 'z': 'ز', 'ʃ': 'ش', 'ʒ': 'ج',
-            'x': 'خ', 'h': 'ه', 'm': 'م', 'n': 'ن', 'l': 'ل', 'r': 'ر',
+            'x': 'خ', 'h': 'ه', 'm': 'म', 'n': 'न', 'l': 'ل', 'r': 'ر',
             'j': 'ي', 'w': 'و', 'θ': 'ث', 'ð': 'ذ', 't͡ʃ': 'تش', 'd͡ʒ': 'ج',
-            'ŋ': 'ن', 'ɹ': 'ر', 'ɾ': 'ر'
+            'ŋ': 'ن', 'ɹ': 'र', 'ɾ': 'र'
         },
         'vowels': {
             'a': '\u064E', 'æ': '\u064E', 'e': '\u0650', 'i': '\u0650', 
@@ -46,8 +46,25 @@ MAPS = {
             'ʊ': '\u064F', 'ʌ': '\u064E', 'ɛ': '\u0650', 'ɑ': '\u064E',
             'ɔ': '\u064E', 'oʊ': '\u064F', 'ɚ': '\u064Eر', 'ɝ': '\u064Eر'
         },
-        'sofit': {}, # Arabic handles its own joining logic in translation
+        'sofit': {},
         'target': 'ar'
+    },
+    'indian': {
+        'consonants': {
+            'p': 'प', 'b': 'ब', 't': 'त', 'd': 'द', 'k': 'क', 'ɡ': 'ग',
+            'f': 'फ़', 'v': 'व', 's': 'स', 'z': 'ज़', 'ʃ': 'श', 'ʒ': 'झ',
+            'x': 'ख', 'h': 'ह', 'm': 'म', 'n': 'न', 'l': 'ल', 'r': 'र',
+            'j': 'य', 'w': 'व', 'θ': 'थ', 'ð': 'द', 't͡ʃ': 'च', 'd͡ʒ': 'ज',
+            'ŋ': 'ङ', 'ɹ': 'र', 'ɾ': 'र'
+        },
+        'vowels': {
+            'a': 'ा', 'æ': 'ा', 'e': 'े', 'i': 'ि', 
+            'o': 'ो', 'u': 'ु', 'ə': '', 'ɪ': 'ि', 
+            'ʊ': 'ु', 'ʌ': 'ा', 'ɛ': 'े', 'ɑ': 'ा',
+            'ɔ': 'ो', 'oʊ': 'ो', 'ɚ': 'र', 'ɝ': 'र'
+        },
+        'sofit': {},
+        'target': 'hi'
     }
 }
 
@@ -66,11 +83,16 @@ def get_phonetic_sig(name, mode):
                 sig += cfg['consonants'][p]
                 last_was_con = True
             elif p in cfg['vowels']:
-                anchor = 'א' if mode == 'hebrew' and not last_was_con else ''
-                sig += anchor + cfg['vowels'][p]
-                last_was_con = 'ר' in cfg['vowels'][p]
-        
-        # Apply Sofit for Hebrew
+                if mode == 'hebrew':
+                    anchor = 'א' if not last_was_con else ''
+                    sig += anchor + cfg['vowels'][p]
+                elif mode == 'arabic':
+                    anchor = 'ا' if not last_was_con else ''
+                    sig += anchor + cfg['vowels'][p]
+                else: # Indian/Hindi
+                    sig += cfg['vowels'][p]
+                last_was_con = 'ר' in cfg['vowels'][p] or mode == 'indian'
+
         if mode == 'hebrew':
             chars = list(sig)
             for j in range(len(chars)-1, -1, -1):
@@ -91,8 +113,7 @@ def oracle():
     parts = [get_phonetic_sig(w, mode) for w in words]
     full_sig = " ".join(parts)
     
-    # Translate using the selected lens
-    target = MAPS[mode]['target']
+    target = MAPS.get(mode, MAPS['hebrew'])['target']
     result = translate_client.translate(full_sig, target_language='en', source_language=target)
     
     return jsonify({

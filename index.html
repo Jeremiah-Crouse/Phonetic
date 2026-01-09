@@ -26,8 +26,9 @@
 <body>
 
     <div class="lens-bar">
-        <span class="lens-btn active" id="btn-hebrew" onclick="setLens('hebrew')">HEBREW LENS</span>
-        <span class="lens-btn" id="btn-arabic" onclick="setLens('arabic')">ARABIC LENS</span>
+        <span class="lens-btn active" id="btn-hebrew" onclick="setLens('hebrew')">HEBREW</span>
+        <span class="lens-btn" id="btn-arabic" onclick="setLens('arabic')">ARABIC</span>
+        <span class="lens-btn" id="btn-indian" onclick="setLens('indian')">INDIAN</span>
     </div>
 
     <div id="chat-flow">
@@ -44,7 +45,6 @@
         const flow = document.getElementById('chat-flow');
         const API_URL = 'https://phonetic-rr67.onrender.com/oracle';
 
-        // Helper to turn &#39; into '
         function decodeHtml(html) {
             const txt = document.createElement("textarea");
             txt.innerHTML = html;
@@ -78,13 +78,10 @@
                         body: JSON.stringify({ name: text, mode: currentMode })
                     });
                     const data = await response.json();
-                    
                     loader.classList.remove('loading');
-                    // APPLY DECODER HERE
                     loader.innerText = decodeHtml(data.interpretation);
-                    
                 } catch (err) {
-                    loader.innerText = "The connection is shadowed. Check the server.";
+                    loader.innerText = "The connection is shadowed.";
                 }
                 flow.scrollTop = flow.scrollHeight;
             }
